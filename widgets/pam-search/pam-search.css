@@ -1,7 +1,6 @@
 .pam-search-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
 }
 
 .pam-search-controls {
@@ -10,17 +9,21 @@
 
 .pam-search-controls input[type="text"] {
   padding: 8px;
-  width: 100%;
-  max-width: 300px;
+  width: calc(100% - 20px);
   margin-right: 10px;
 }
 
-.pam-search-results {
+ol.pam-search-results {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 10px;
+  padding: 0;
+  list-style: none;
 }
 
+li.pam-search-card a {
+  padding: 0;
+}
 .pam-search-results > div[role="button"] {
   cursor: pointer;
 }
@@ -36,8 +39,7 @@
 .pam-search-card {
   display: flex;
   flex-direction: column;
-  border-radius: 8px;
-  border: 1px solid #eee;
+  border: 1px solid #ccc;
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
   padding: 0;
 }
@@ -97,4 +99,24 @@
 mark {
   background-color: #fff59d;
   padding: 0 2px;
+}
+
+.pam-search-images {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+}
+
+.pam-search-images li {
+    margin: 0;
+    border: 4px solid #ccc;
+    padding: 8px;
+}
+
+.pam-search-images img {
+    width: 100%;
+    aspect-ratio: 1/1;
+    object-fit: contain;
 }

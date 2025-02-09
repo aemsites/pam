@@ -6,15 +6,14 @@ async function loadData() {
     const params = new URLSearchParams(url.search);
     const sku = url.pathname.split('/')[3].split('.')[0];
     const name = url.pathname.split('/')[2].replace(/-/g, ' ');
-    console.log(index, name, sku);
     return { sku, name, url: loc.URL };
   });
   const sorted = data.sort((a, b) => a.sku ? a.sku.localeCompare(b.sku || '') : -1);
   return sorted;
 }
 
-function displayResults(search) {
-  const result = document.querySelector('.pam-search-results');
+async function displayResults(search) {
+  console.log('displayResults', search);
   const filtered = search ? window.pamSearch.filter(
     (item) => {
       const nameMatch = item.name.toLowerCase().includes(search.toLowerCase());
@@ -23,45 +22,72 @@ function displayResults(search) {
       return nameMatch || skuMatch;
     },
   ) : window.pamSearch;
+  const result = document.querySelector('.pam-search-results');
   result.textContent = '';
-  filtered.forEach((item, i) => {
-    if (i > 100) return;
+  const details = document.querySelector('.pam-search-results-details');
+  details.textContent = '';
+  if (filtered.length === 1) {
     const div = document.createElement('div');
-    const highlightedSku = search ? item.sku.replace(
-      new RegExp(`(${search})`, 'gi'),
-      '<mark>$1</mark>',
-    ) : item.sku;
-    const highlighted = search ? item.name.replace(
-      new RegExp(`(${search})`, 'gi'),
-      '<mark>$1</mark>',
-    ) : item.name;
-    const a = document.createElement('a');
-    a.href = item.url;
-    a.target = '_blank';
-    a.textContent = 'View';
-    div.innerHTML = `<span class="pam-search-sku">${highlightedSku}</span><span class="pam-search-name">${highlighted}</span>`;
-    div.append(a);
-    if (item.sku) {
-      const img = document.createElement('img');
-      img.src = `https://pisces.bbystatic.com/image2/BestBuy_US/images/products/${item.sku.substring(0, 3)}/${item.sku}_sa.jpg;maxHeight=640;maxWidth=550;format=webp`;
-      img.loading = 'lazy';
-      img.alt = item.name;
-      div.prepend(img);
-    }
-    div.classList.add('pam-search-card');
-    result.append(div);
-  });
+    div.classList.add('pam-search-details');
+    const resp = await fetch(`https://little-forest-58aa.david8603.workers.dev/?url=${filtered[0].url}`);
+    const html = await resp.text();
+    const imgSrcs = html.matchAll(/<img[^>]+src="([^">]+)"/g);
+    const title = html.match(/<title >(.*?)<\/title>/)?.[1].split('- Best Buy')[0].trim();
+    const images = [];
+    const ul = document.createElement('ul');
+    div.innerHTML = `<div>SKU "${filtered[0].sku}"</div><h2>${title}</h2>`;
+    ul.classList.add('pam-search-images');
+    imgSrcs.forEach((match) => {
+      const src = match[1];
+      console.log(src);
+      if (src.includes('/products/')) {
+        const img = document.createElement('img');
+        const imgname = src.split('/').pop().split(';')[0];
+        if (images.includes(imgname)) return;
+        images.push(imgname);
+        console.log(imgname);
+        img.src = `https://pisces.bbystatic.com/image2/BestBuy_US/images/products/${imgname.substring(0, 3)}/${imgname}_sa.jpg;maxHeight=640;maxWidth=550;format=webp`;
+        img.alt = 'Product Image';
+        const item = document.createElement('li');
+        item.append(img);
+        ul.append(item);
+      }
+    });
+    div.append(ul);
+    details.append(div);
+  } else {
+    filtered.forEach((item, i) => {
+      if (i > 100) return;
+      const li = document.createElement('li');
+      const highlightedSku = search ? item.sku.replace(
+        new RegExp(`(${search})`, 'gi'),
+        '<mark>$1</mark>',
+      ) : item.sku;
+      const highlighted = search ? item.name.replace(
+        new RegExp(`(${search})`, 'gi'),
+        '<mark>$1</mark>',
+      ) : item.name;
+      li.innerHTML = `<span class="pam-search-sku"><a href="${window.location.pathname}?search=${item.sku}">${highlightedSku}</a></span><span class="pam-search-name">${highlighted}</span>`;
+      if (item.sku) {
+        const img = document.createElement('img');
+        img.src = `https://pisces.bbystatic.com/image2/BestBuy_US/images/products/${item.sku.substring(0, 3)}/${item.sku}_sa.jpg;maxHeight=640;maxWidth=550;format=webp`;
+        img.loading = 'lazy';
+        img.alt = item.name;
+        li.prepend(img);
+      }
+      li.classList.add('pam-search-card');
+      result.append(li);
+    });
+  }
 }
 
 function updateSearchResults(widget) {
   const { value } = widget.querySelector('input[name="search"]');
-  const status = widget.querySelector('input[name="status"]').value;
   document.querySelector('.pam-search-results').textContent = '';
-  displayResults(value, status);
+  displayResults(value);
   const params = new URLSearchParams();
   if (value) params.set('search', value);
-  if (status) params.set('status', status);
-  if (status || value) {
+  if (value) {
     window.history.replaceState(null, '', `?${params.toString()}`);
   } else {
     window.history.replaceState(null, '', window.location.pathname);
@@ -78,26 +104,11 @@ export default async function decorate(widget) {
   widget.querySelector('input[name="search"]').addEventListener('input', () => {
     updateSearchResults(widget);
   });
-  widget.querySelector('input[name="status"]').addEventListener('input', () => {
-    updateSearchResults(widget);
-  });
-  widget.querySelector('input[name="allocated"]').addEventListener('change', (event) => {
-    if (event.target.checked) widget.querySelector('input[name="status"]').value = 'A';
-    else widget.querySelector('input[name="status"]').value = '';
-    updateSearchResults(widget);
-  });
 
   const params = new URLSearchParams(window.location.search);
   const search = params.get('search');
   if (search) {
     widget.querySelector('input[name="search"]').value = search;
-  }
-  const status = params.get('status');
-  if (status) {
-    widget.querySelector('input[name="status"]').value = status;
-    if (status === 'A') {
-      widget.querySelector('input[name="allocated"]').checked = true;
-    }
   }
   initialLoad(widget);
 }
