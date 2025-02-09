@@ -35,7 +35,7 @@ async function displayResults(search) {
     const title = html.match(/<title >(.*?)<\/title>/)?.[1].split('- Best Buy')[0].trim();
     const images = [];
     const ul = document.createElement('ul');
-    div.innerHTML = `<div>SKU "${filtered[0].sku}"</div><h2>${title}</h2>`;
+    div.innerHTML = `<div>SKU "${filtered[0].sku}"</div><h3>${title}</h3>`;
     ul.classList.add('pam-search-images');
     imgSrcs.forEach((match) => {
       const src = match[1];
