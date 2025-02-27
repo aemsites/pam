@@ -1,17 +1,3 @@
-async function loadData() {
-  const resp = await fetch('/best-buy.json?limit=100000');
-  const json = await resp.json();
-  const data = json.data.map((loc, index) => {
-    const url = new URL(loc.URL);
-    const params = new URLSearchParams(url.search);
-    const sku = url.pathname.split('/')[3].split('.')[0];
-    const name = url.pathname.split('/')[2].replace(/-/g, ' ');
-    return { sku, name, url: loc.URL };
-  });
-  const sorted = data.sort((a, b) => a.sku ? a.sku.localeCompare(b.sku || '') : -1);
-  return sorted;
-}
-
 async function displayResults(search) {
   console.log('displayResults', search);
   const filtered = search ? window.pamSearch.filter(
@@ -27,31 +13,20 @@ async function displayResults(search) {
   const details = document.querySelector('.pam-search-results-details');
   details.textContent = '';
   if (filtered.length === 1) {
+    const { getProductDetails } = await import(`./modules/${PROFILE}.js`);
+    const { title, images } = await getProductDetails(filtered[0].url);
     const div = document.createElement('div');
     div.classList.add('pam-search-details');
-    const resp = await fetch(`https://little-forest-58aa.david8603.workers.dev/?url=${filtered[0].url}`);
-    const html = await resp.text();
-    const imgSrcs = html.matchAll(/<img[^>]+src="([^">]+)"/g);
-    const title = html.match(/<title >(.*?)<\/title>/)?.[1].split('- Best Buy')[0].trim();
-    const images = [];
     const ul = document.createElement('ul');
     div.innerHTML = `<div>SKU "${filtered[0].sku}"</div><h3>${title}</h3>`;
     ul.classList.add('pam-search-images');
-    imgSrcs.forEach((match) => {
-      const src = match[1];
-      console.log(src);
-      if (src.includes('/products/')) {
-        const img = document.createElement('img');
-        const imgname = src.split('/').pop().split(';')[0];
-        if (images.includes(imgname)) return;
-        images.push(imgname);
-        console.log(imgname);
-        img.src = `https://pisces.bbystatic.com/image2/BestBuy_US/images/products/${imgname.substring(0, 3)}/${imgname}_sa.jpg;maxHeight=640;maxWidth=550;format=webp`;
-        img.alt = 'Product Image';
-        const item = document.createElement('li');
-        item.append(img);
-        ul.append(item);
-      }
+    images.forEach((src) => {
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = 'Product Image';
+      const item = document.createElement('li');
+      item.append(img);
+      ul.append(item);
     });
     div.append(ul);
     details.append(div);
@@ -70,7 +45,7 @@ async function displayResults(search) {
       li.innerHTML = `<span class="pam-search-sku"><a href="${window.location.pathname}?search=${item.sku}">${highlightedSku}</a></span><span class="pam-search-name">${highlighted}</span>`;
       if (item.sku) {
         const img = document.createElement('img');
-        img.src = `https://pisces.bbystatic.com/image2/BestBuy_US/images/products/${item.sku.substring(0, 3)}/${item.sku}_sa.jpg;maxHeight=640;maxWidth=550;format=webp`;
+        img.src = item.image;
         img.loading = 'lazy';
         img.alt = item.name;
         li.prepend(img);
@@ -95,12 +70,18 @@ function updateSearchResults(widget) {
 }
 
 async function initialLoad(widget) {
+  const { loadData } = await import(`./modules/${PROFILE}.js`);
   const data = await loadData();
   window.pamSearch = data;
   updateSearchResults(widget);
 }
 
+let PROFILE;
+
 export default async function decorate(widget) {
+  PROFILE = widget.dataset.profile;
+  console.log('PROFILE', PROFILE);
+  console.log(widget.dataset);
   widget.querySelector('input[name="search"]').addEventListener('input', () => {
     updateSearchResults(widget);
   });

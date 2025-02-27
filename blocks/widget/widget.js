@@ -11,6 +11,15 @@ export default async function decorate(widget) {
   const pathSplit = widgetUrl.split('/');
   const widgetName = pathSplit[pathSplit.length - 2];
 
+  widget.className = `widget ${widgetName}`;
+  widget.dataset.widgetUrl = widgetUrl;
+  const params = new URLSearchParams(parsedWidgetUrl.searchParams);
+  // eslint-disable-next-line no-restricted-syntax
+  for (const [key, value] of params.entries()) {
+    widget.dataset[key] = value;
+  }
+
+
   try {
     const resp = await fetch(`${window.hlx.codeBasePath}/widgets/${widgetName}/${widgetName}.html`);
     const html = await resp.text();
@@ -36,12 +45,5 @@ export default async function decorate(widget) {
   } catch (error) {
     // eslint-disable-next-line no-console
     console.log(`failed to load block ${widgetName}`, error);
-  }
-  widget.className = `widget ${widgetName}`;
-  widget.dataset.widgetUrl = widgetUrl;
-  const params = new URLSearchParams(parsedWidgetUrl.searchParams);
-  // eslint-disable-next-line no-restricted-syntax
-  for (const [key, value] of params.entries()) {
-    widget.dataset[key] = value;
   }
 }
