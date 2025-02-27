@@ -22,7 +22,7 @@ async function displayResults(search) {
     const div = document.createElement('div');
     div.classList.add('pam-search-details');
     const ul = document.createElement('ul');
-    div.innerHTML = `<div>SKU "${filtered[0].sku}"</div><h3>${title}</h3>`;
+    div.innerHTML = `<div>SKU "${filtered[0].sku}"</div><a href="${filtered[0].url}"><h3>${title}</h3></a>`;
     ul.classList.add('pam-search-images');
     images.forEach((src) => {
       const img = document.createElement('img');
