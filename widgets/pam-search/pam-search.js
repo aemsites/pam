@@ -12,9 +12,13 @@ async function displayResults(search) {
   result.textContent = '';
   const details = document.querySelector('.pam-search-results-details');
   details.textContent = '';
-  if (filtered.length === 1) {
+  if (filtered.length === 0) {
+    details.textContent = 'No results found';
+  } else if (filtered.length === 1) {
     const { getProductDetails } = await import(`./modules/${PROFILE}.js`);
+    document.getElementById('pam-search-results-loading').setAttribute('aria-hidden', 'false');
     const { title, images } = await getProductDetails(filtered[0].url);
+    document.getElementById('pam-search-results-loading').setAttribute('aria-hidden', 'true');
     const div = document.createElement('div');
     div.classList.add('pam-search-details');
     const ul = document.createElement('ul');

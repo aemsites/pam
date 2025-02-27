@@ -120,3 +120,7 @@ mark {
     aspect-ratio: 1/1;
     object-fit: contain;
 }
+
+#pam-search-results-loading[aria-hidden="true"] {
+  display: none;
+}

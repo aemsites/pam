@@ -37,7 +37,12 @@ export async function loadData() {
         return string.substring(startIndex + open.length, endIndex);
       }    
     
-    const resp = await fetch(`https://little-forest-58aa.david8603.workers.dev/?url=${url}`);
+    const resp = await fetch(`https://little-forest-58aa.david8603.workers.dev/?url=${url}`, {
+        redirect: 'manual',
+    });
+    if (resp.status !== 200) {
+        return { title: 'Details not found', images: [] };
+    }
     const html = await resp.text();
     const magentoJson = chop('"spConfig": ', '"gallerySwitchStrategy"', html).trim();
     const imageSources = JSON.parse(magentoJson.substring(0, magentoJson.length - 1)).images;
