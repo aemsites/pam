@@ -7,7 +7,12 @@ export async function loadData() {
         if (image) {
             const url = new URL(image);
             const splits = url.pathname.split('/');
-            return splits[6].split('.')[0].split('_')[0];
+            if (url.hostname == 'images.visualcomfort.com') {
+              return splits.pop();  
+
+            } else {
+              return splits[6].split('.')[0].split('_')[0];
+            }
         }
         if (path.endsWith('/')) {
             const splits = path.split('/');
