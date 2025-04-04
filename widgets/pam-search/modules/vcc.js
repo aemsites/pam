@@ -27,7 +27,7 @@ export async function loadData() {
       const imageElem = urlElem.querySelector('image loc');
       const image = imageElem ? imageElem.textContent : '';
       const sku = extractSku(url.pathname, image)
-      return { sku, name, url: loc.textContent, image };
+      return { sku, name, url: loc.textContent, image: `https://little-forest-58aa.david8603.workers.dev/?url=${encodeURIComponent(image)}&cache=true` };
     });
     const sorted = data.sort((a, b) => a.sku ? a.sku.localeCompare(b.sku || '') : -1);
     return sorted;
@@ -56,7 +56,7 @@ export async function loadData() {
     const keys = Object.keys(imageSources);
     keys.forEach((key) => {
         console.log(imageSources[key]);
-        images.push(...imageSources[key].map((img) => img.thumb));
+        images.push(...imageSources[key].map((img) => `https://little-forest-58aa.david8603.workers.dev/?url=${encodeURIComponent(img.thumb)}&cache=true`));
     });
     return { title, images };
   }
